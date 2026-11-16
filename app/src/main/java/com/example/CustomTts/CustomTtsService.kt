@@ -205,7 +205,7 @@ override fun onIsLanguageAvailable(lang: String?, country: String?, variant: Str
         Log.d(TAG, "onGetLanguage called")
         // Beispiel: Gibt Englisch US als Standard zurück
         // TODO: An ausgewählte oder konfigurierte Standardsprache anpassen
-        return arrayOf("eng", "USA", "")
+        return arrayOf("rus", "RUS", "")
     }
 
     override fun onLoadLanguage(lang: String?, country: String?, variant: String?): Int {
@@ -235,8 +235,8 @@ override fun onIsLanguageAvailable(lang: String?, country: String?, variant: Str
 
         // Extrahiere Parameter aus der Anfrage
         val text = request.charSequenceText?.toString() ?: ""
-        val language = request.language ?: "en"
-        val country = request.country ?: "US"
+        val language = request.language ?: "ru"
+        val country = request.country ?: "RU"
         // Android Rate (100=normal) -> OpenAI Speed (1.0=normal)
         val androidRate = request.speechRate.toFloat().coerceIn(20f, 300f)
         val openAiSpeed = androidRate / 100.0f
