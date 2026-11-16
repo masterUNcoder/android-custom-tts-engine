@@ -196,17 +196,9 @@ class CustomTtsService : TextToSpeechService() {
     //--------------------------------------------------------------------------
     // Implementierung der abstrakten TTS-Methoden
     //--------------------------------------------------------------------------
-
-    override fun onIsLanguageAvailable(lang: String?, country: String?, variant: String?): Int {
-        Log.d(TAG, "onIsLanguageAvailable: lang=$lang, country=$country, variant=$variant")
-        // Beispiel: Annahme, dass Backend Englisch, Deutsch, Spanisch unterstützt
-        // TODO: An tatsächliche Backend-Fähigkeiten anpassen
-        return when (lang?.lowercase()) {
-            "eng" -> TextToSpeech.LANG_COUNTRY_AVAILABLE // Oder LANG_AVAILABLE
-            "de" -> TextToSpeech.LANG_COUNTRY_AVAILABLE
-            "es" -> TextToSpeech.LANG_COUNTRY_AVAILABLE
-            else -> TextToSpeech.LANG_NOT_SUPPORTED
-        }
+override fun onIsLanguageAvailable(lang: String?, country: String?, variant: String?): Int {
+    Log.d(TAG, "onIsLanguageAvailable: lang=$lang, country=$country, variant=$variant")
+    return TextToSpeech.LANG_COUNTRY_AVAILABLE
     }
 
     override fun onGetLanguage(): Array<String>? {
