@@ -239,6 +239,7 @@ class CustomTtsService : TextToSpeechService() {
                 callback.error(TextToSpeech.ERROR_NETWORK)
             }
         }
+    }
         @kotlinx.serialization.Serializable
 data class TtsRequestPayload(
     val model: String,
