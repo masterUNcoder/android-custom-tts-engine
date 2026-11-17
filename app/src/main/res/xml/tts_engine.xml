@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tts-engine xmlns:android="http://android.com"
+    android:settingsActivity="com.example.CustomTts.MainActivity" />
