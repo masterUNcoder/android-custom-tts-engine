@@ -1,20 +1,23 @@
 package com.example.CustomTts
 
 import android.media.AudioFormat
+import android.os.Handler
+import android.os.Looper
 import android.speech.tts.SynthesisCallback
 import android.speech.tts.SynthesisRequest
 import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeechService
 import android.util.Log
+import android.widget.Toast
 import com.example.CustomTts.data.PrefKeys
 import com.example.CustomTts.data.settingsDataStore
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.client.plugins.HttpTimeout
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
@@ -25,6 +28,12 @@ import java.nio.ByteOrder
 class CustomTtsService : TextToSpeechService() {
     companion object {
         private const val TAG = "DummyTtsService"
+    }
+
+    private fun showToast(msg: String) {
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(applicationContext, "TTS: $msg", Toast.LENGTH_LONG).show()
+        }
     }
 
     private data class WavHeaderInfo(
@@ -136,6 +145,8 @@ class CustomTtsService : TextToSpeechService() {
         val androidRate = request.speechRate.toFloat().coerceIn(20f, 300f)
         val openAiSpeed = androidRate / 100.0f
 
+        showToast("Запрос: ${text.take(25)}")
+
         if (text.isBlank()) {
             try {
                 callback.start(16000, AudioFormat.ENCODING_PCM_16BIT, 1)
@@ -156,6 +167,7 @@ class CustomTtsService : TextToSpeechService() {
                 val requestedAudioFormat = currentSettings[PrefKeys.RESPONSE_FORMAT] ?: "wav"
 
                 if (backendUrl.isBlank()) {
+                    showToast("Пустой URL в настройках!")
                     callback.error(TextToSpeech.ERROR_SERVICE)
                     return@runBlocking
                 }
@@ -177,11 +189,13 @@ class CustomTtsService : TextToSpeechService() {
                 if (response.status.isSuccess()) {
                     val audioBytes = response.readBytes()
                     if (audioBytes.isEmpty()) {
+                        showToast("Сервер вернул пустой файл")
                         callback.error(TextToSpeech.ERROR_NETWORK)
                         return@runBlocking
                     }
                     val wavInfo = parseWavHeader(audioBytes)
                     if (wavInfo == null) {
+                        showToast("Ошибка заголовка WAV (${audioBytes.size} байт)")
                         callback.error(TextToSpeech.ERROR_INVALID_REQUEST)
                         return@runBlocking
                     }
@@ -191,6 +205,7 @@ class CustomTtsService : TextToSpeechService() {
                         wavInfo.numChannels.toInt()
                     )
                     if (startResult == TextToSpeech.ERROR) {
+                        showToast("Ошибка аудиовыхода Android")
                         callback.error(TextToSpeech.ERROR_OUTPUT)
                         return@runBlocking
                     }
@@ -214,12 +229,14 @@ class CustomTtsService : TextToSpeechService() {
                     }
                     callback.done()
                 } else {
+                    val err = try { response.bodyAsText().take(80) } catch (_: Exception) { "" }
+                    showToast("Ошибка сервера ${response.status.value}: $err")
                     callback.error(TextToSpeech.ERROR_NETWORK)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Synthesis error", e)
+                showToast("Сбой: ${e.message?.take(60)}")
                 callback.error(TextToSpeech.ERROR_NETWORK)
             }
         }
-    }
-}
+        
