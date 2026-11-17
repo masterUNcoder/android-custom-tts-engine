@@ -239,4 +239,11 @@ class CustomTtsService : TextToSpeechService() {
                 callback.error(TextToSpeech.ERROR_NETWORK)
             }
         }
-        
+        @kotlinx.serialization.Serializable
+data class TtsRequestPayload(
+    val model: String,
+    val input: String,
+    val voice: String,
+    val response_format: String = "wav",
+    val speed: Float = 1.0f
+)
