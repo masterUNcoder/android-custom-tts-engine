@@ -254,11 +254,11 @@ override fun onIsLanguageAvailable(lang: String?, country: String?, variant: Str
         }
 
         // Starte die Coroutine für die eigentliche Arbeit
-        serviceScope.launch {
+        runBlocking {
             // Stelle sicher, dass der Callback noch gültig ist
             val safeCallback = callback ?: run {
                 Log.w(TAG, "Callback became null before coroutine could process.")
-                return@launch
+                return@runBlocking
             }
 
             try {
@@ -276,7 +276,7 @@ override fun onIsLanguageAvailable(lang: String?, country: String?, variant: Str
                 if (backendUrl.isBlank()) {
                     Log.e(TAG, "Backend URL is missing in settings.")
                     safeCallback.error(TextToSpeech.ERROR_SERVICE)
-                    return@launch
+                    return@runBlocking
                 }
                 Log.d(TAG, "Using Settings: URL=$backendUrl, Key=******, Model=$apiModel, Voice=$apiVoice, Format=$requestedAudioFormat, Speed=$openAiSpeed")
                 Log.d(TAG, "Using Settings: ..., Format=$requestedAudioFormat, ...")
@@ -333,7 +333,7 @@ override fun onIsLanguageAvailable(lang: String?, country: String?, variant: Str
                             // Ungültiger oder nicht unterstützter WAV-Header
                             Log.e(TAG, "Failed to parse or unsupported WAV header.")
                             safeCallback.error(TextToSpeech.ERROR_INVALID_REQUEST) // Fehler im empfangenen Format
-                            return@launch
+                            return@runBlocking
                         }
 
                         Log.d(TAG, "Calling callback.start() with WAV params: Rate=${wavInfo.sampleRate}, Encoding=${wavInfo.androidEncoding}, Channels=${wavInfo.numChannels}")
@@ -341,7 +341,7 @@ override fun onIsLanguageAvailable(lang: String?, country: String?, variant: Str
                         if (startResult == TextToSpeech.ERROR) {
                             Log.e(TAG, "WAV start failed!")
                             safeCallback.error(TextToSpeech.ERROR_OUTPUT)
-                            return@launch
+                            return@runBlocking
                         }
 
                         // Bytes NACH dem Header streamen (Die Bytes sind bereits Float oder Int, je nach Header)
@@ -369,7 +369,7 @@ override fun onIsLanguageAvailable(lang: String?, country: String?, variant: Str
                             if (audioAvailableResult == TextToSpeech.ERROR) {
                                 Log.e(TAG, "WAV audioAvailable failed!")
                                 safeCallback.error(TextToSpeech.ERROR_OUTPUT)
-                                return@launch
+                                return@runBlocking
                             }
                             bytesStreamed += actualChunkSize
                         } // Ende while
@@ -381,12 +381,12 @@ override fun onIsLanguageAvailable(lang: String?, country: String?, variant: Str
                         // Komprimierte Formate -> Dekodierung NÖTIG!
                         Log.e(TAG,"Decoding for format '$requestedAudioFormat' not implemented yet!")
                         safeCallback.error(TextToSpeech.ERROR_SERVICE) // Fehler: Noch nicht implementiert
-                        return@launch
+                        return@runBlocking
                     } else {
                         // Nicht unterstütztes Format angefordert/empfangen
                         Log.e(TAG, "Unsupported audio format requested/received: $requestedAudioFormat")
                         safeCallback.error(TextToSpeech.ERROR_INVALID_REQUEST)
-                        return@launch
+                        return@runBlocking
                     }
                 } else {
                     // Fehler bei der Backend-Antwort
